@@ -20,6 +20,14 @@ Or install it yourself as:
 
 ## Usage
 
+### Require
+
+~~~
+require 'mqs'
+~~
+
+Why `mqs` instead of `aliyun-mqs`? This might be changed later.
+
 ### Configure
 
 ~~~
@@ -64,7 +72,7 @@ queue.delete "#{you_message_recipet_handlerer}"
 
 ## Contributing
 
-1. Fork it ( https://github.com/mgampkay/mqs/fork )
+1. Fork it ( https://github.com/mgampkay/aliyun-mqs/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
