@@ -24,9 +24,9 @@ Or install it yourself as:
 
 ~~~
 require 'mqs'
-~~
+~~~
 
-Why `mqs` instead of `aliyun-mqs`? This might be changed later.
+Why `mqs` instead of `aliyun-mqs`? This should be changed later.
 
 ### Configure
 
