@@ -34,22 +34,23 @@ end
 ### Get an existing queue
 
 ~~~
-queue = Mqs::Queue.new('queue-name')
-queue = Mqs::Queue.new('queue-name', :owner_id: 'your_owner_id') # overwrite configurations
+queue = Mqs::Queue.new 'queue-name'
+queue = Mqs::Queue.new 'queue-name', :owner_id: 'your_id' # overwrite configurations
 ~~~
 
 ### Send messages
 
 ~~~
-resp = queue.send("Hello, World!")
-resp = queue.send("Hello, Cirno!", delay_seconds: 9, priority: 9)
+resp = queue.send "Hello, World!"
+resp = queue.send "Hello, Cirno!", delay_seconds: 9, priority: 9
 ~~~
 
-### Recv messages
+### Recveive messages
 
 ~~~
-message = queue.recv
-message = queue.recv 10 # wait_seconds
+message = queue.receive
+message = queue.receive waitseconds: 10, peekonly: true
+message = queue.peek
 ~~~
 
 ### Delete messages

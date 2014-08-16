@@ -40,13 +40,20 @@ module Mqs
       send_request(request_uri, verb, headers, content_body)
     end
 
-    def receive(waitseconds = nil)
+    def receive(waitseconds: nil, peekonly: false)
       verb = 'GET'
       content_body = ''
       content_md5 = Base64::encode64(Digest::MD5.hexdigest(content_body)).chop
       gmt_date = gmt_now
       mqs_headers = {'x-mqs-version' => Version}
-      request_resource =  "/#{@access_queue}/messages" + (waitseconds ? '?' + {waitseconds: waitseconds}.to_param : '')
+      query_params = {}
+      if waitseconds
+        query_params[:waitseconds] = waitseconds
+      end
+      if peekonly
+        query_params[:peekonly] = true
+      end
+      request_resource =  "/#{@access_queue}/messages" + (query_params.length > 0 ? '?' + query_params.to_param : '')
       headers = {'Host' => @access_host,
                  'Date' => gmt_date,
                  'Content-Type' => ContentType,
@@ -83,9 +90,8 @@ module Mqs
       send_request(request_uri, verb, headers, content_body)
     end
 
-    # TODO: implement peek
-    def peek
-
+    def peek(waitseconcds: nil)
+      receive(waitseconds: waitseconcds, peekonly: true)
     end
 
     private
