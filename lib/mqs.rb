@@ -2,6 +2,7 @@ require 'mqs/version'
 require 'mqs/queue'
 require 'mqs/response'
 require 'mqs/configuration'
+require 'mqs/http'
 
 module Mqs
 
