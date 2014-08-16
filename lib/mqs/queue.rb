@@ -12,14 +12,37 @@ module Mqs
     Version     = '2014-07-08'
     ContentType = 'text/xml;utf-8'
 
-    def initialize(name, owner_id: nil)
+    def initialize(name, access_owner_id: nil)
       @access_key_id     = Mqs.configuration.access_key_id
       @access_key_secret = Mqs.configuration.access_key_secret
       @access_region     = Mqs.configuration.access_region
-      @access_owner_id   = owner_id || Mqs.configuration.access_owner_id
+      @access_owner_id   = access_owner_id || Mqs.configuration.access_owner_id
       @access_queue = name
-      @access_host = "#{@access_owner_id}.mqs-#{@access_region}.aliyuncs.com"
+      @access_host  = "#{@access_owner_id}.mqs-#{@access_region}.aliyuncs.com"
       throw '参数不能为nil' if instance_variables.any? {|x| x == nil}
+    end
+
+    def self.get(name,  access_owner_id: nil)
+      queue = Queue.new(name, access_owner_id: access_owner_id)
+      queue
+    end
+
+    def destroy
+      verb = 'DELETE'
+      content_body = ''
+      content_md5  = Base64::encode64(Digest::MD5.hexdigest(content_body)).chop
+      mqs_headers  = {'x-mqs-version' => Version}
+      request_resource = "/#{@access_queue}"
+      gmt_date = DateTime.now.httpdate
+      headers = {'Host' => @access_host,
+                 'Date' => gmt_date,
+                 'Content-Type' => ContentType,
+                 'Content-MD5'  => content_md5
+                }
+      headers.merge! mqs_headers
+      headers['Authorization'] = sign_header(verb, content_md5, ContentType, gmt_date, mqs_headers, request_resource)
+      request_uri = "http://#{@access_host}#{request_resource}"
+      send_request(request_uri, verb, headers, content_body)
     end
 
     def send(message_body, delay_seconds: 0, priority: 8)
