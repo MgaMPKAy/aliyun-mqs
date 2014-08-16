@@ -40,13 +40,13 @@ module Mqs
       send_request(request_uri, verb, headers, content_body)
     end
 
-    def receive(wait_seconds = nil)
+    def receive(waitseconds = nil)
       verb = 'GET'
       content_body = ''
       content_md5 = Base64::encode64(Digest::MD5.hexdigest(content_body)).chop
       gmt_date = gmt_now
       mqs_headers = {'x-mqs-version' => Version}
-      request_resource =  "/#{@access_queue}/messages" + (wait_seconds ? {wait_seconds: wait_seconds}.to_param : '')
+      request_resource =  "/#{@access_queue}/messages" + (waitseconds ? '?' + {waitseconds: waitseconds}.to_param : '')
       headers = {'Host' => @access_host,
                  'Date' => gmt_date,
                  'Content-Type' => ContentType,
