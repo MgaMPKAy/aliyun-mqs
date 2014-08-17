@@ -41,25 +41,38 @@ end
 
 ### Response
 
-Every leaf element in the XML response becames an attribute in the `Response` object, eg:
-
+Most API returns a `Response` object, which contains status and all leaf element in the XML response.
+Eg: Every leaf element of
 
 ```xml
 <?xml version="1.0"?>
 <Message xmlns="http://mqs.aliyuncs.com/doc/v1">
-  <MessageBodyMD5>65A8E27D8879283831B664BD8B7F0AD4</MessageBodyMD5>
-  <MessageId>6001A74BEB1D5460-1-147DF4497D4-200000024</MessageId>
+  <MessageBodyMD5>654E27D8879283831B664BD8B7F0AD4</MessageBodyMD5>
+  <MessageId>6003A74BEB1D5460-1-147DF4497D4-200000024</MessageId>
 </Message>
 ```
-
-becames:
+can be accessed as:
 
 ```ruby
-resp.message_body_md5
-resp.message_id
+Response::message_body_md5
+Response::message_id
 ```
 
-To determine wheater a request call is succeed, use `Response::success?`
+To determine wheater a request call is succeed, use `Response::success?`. `Response` is an imutable object, all instance method with side-effects will return a new instance of `Response`. So, instead of
+
+```ruby
+message = queue.receive         # message is an Response
+message.visibility = 1.minute
+message.visibility = 8.minute  # wrong, reuse receipt handle
+```
+
+you shoud pass the return value (agian, an `Response`) around:
+
+```ruby
+resp = queue.receive
+resp = resp.visibility = 1.minute
+resp = resp.visibility = 8.minute
+```
 
 ### Get an existing queue
 
@@ -95,6 +108,13 @@ message = queue.peek
 message.delete
 queue.delete message
 queue.delete "#{you_message_recipet_handlerer}"
+```
+### Change message visibility
+
+```ruby
+resp = message.visibility = Time.now + 1.hour
+resp = message.visibility = Time.now.to_f * 1000 + 10
+resp = message.visibility += 1.hour
 ```
 
 ## Contributing
