@@ -26,7 +26,7 @@ Or install it yourself as:
 require 'mqs'
 ```
 
-Why `mqs` instead of `aliyun-mqs`? This should be changed later.
+Yes, require `mqs` instead of `aliyun-mqs`. It's kind of wired and unconsistent.
 
 ### Configure
 

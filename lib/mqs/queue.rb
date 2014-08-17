@@ -55,7 +55,7 @@ module Mqs
       end
       request_resource = "/#{@access_queue}/messages?" + {ReceiptHandle: receipt_handle}.to_param
       request_uri = "http://#{@access_host}#{request_resource}"
-      send_request(request_uri, verb, headers, content_body)
+      send_request(verb, request_uri)
     end
 
     def peek(waitseconcds: nil)

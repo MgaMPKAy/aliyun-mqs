@@ -28,10 +28,13 @@ module Mqs
     def xml_to_attribute(xml)
       Nokogiri::XML(xml).root.children.each do |child|
         if child.element?
-          define_singleton_method child.name.underscore do
-            instance_variable_get ('@' + child.name.underscore)
+          name  = child.name.underscore
+          value = child.content.to_s
+          value = Time.at(value.to_f / 1000) if name.end_with?('_time')
+          define_singleton_method name do
+            instance_variable_get ('@' + name)
           end
-          self.instance_variable_set('@' + child.name.underscore, child.content.to_s)
+          self.instance_variable_set('@' + name, value)
         end
       end
     end
