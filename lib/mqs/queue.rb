@@ -2,11 +2,6 @@ require 'active_support/core_ext/hash'
 require 'builder'
 require 'mqs/http'
 
-# require 'base64'
-# require 'date'
-# require 'digest'
-# require 'net/http'
-# require 'uri'
 module Mqs
 
   class Queue
@@ -23,8 +18,7 @@ module Mqs
     end
 
     def self.get(name,  access_owner_id: nil)
-      queue = Queue.new(name, access_owner_id: access_owner_id)
-      queue
+      Queue.new(name, access_owner_id: access_owner_id)
     end
 
     def destroy
@@ -45,14 +39,10 @@ module Mqs
     def receive(waitseconds: nil, peekonly: false)
       verb = 'GET'
       query_params = {}
-      if waitseconds
-        query_params[:waitseconds] = waitseconds
-      end
-      if peekonly
-        query_params[:peekonly] = true
-      end
+      query_params[:waitseconds] = waitseconds if waitseconds
+      query_params[:peekonly] = true if peekonly # Aliyun doesn't accept uncessary query params
       request_resource =  "/#{@access_queue}/messages" + (query_params.length > 0 ? '?' + query_params.to_param : '')
-      request_uri = "http://#{@access_host}#{request_resource}"
+      request_uri      = "http://#{@access_host}#{request_resource}"
       send_request(verb, request_uri)
     end
 

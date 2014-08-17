@@ -59,7 +59,7 @@ resp.message_body_md5
 resp.message_id
 ```
 
-To determine wheater a request call is successed, use `Response::success?`
+To determine wheater a request call is succeed, use `Response::success?`
 
 ### Get an existing queue
 
