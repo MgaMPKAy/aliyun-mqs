@@ -1,5 +1,7 @@
 # aliyun-mqs
 
+[![Gem Version](https://badge.fury.io/rb/aliyun-mqs.svg)](http://badge.fury.io/rb/aliyun-mqs)
+
 Talk to the mighty Aliyun MQS with charming ruby.
 
 ## Installation
