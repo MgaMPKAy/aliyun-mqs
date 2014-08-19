@@ -23,15 +23,15 @@ Or install it yourself as:
 ### Require
 
 ```ruby
-require 'mqs'
+require 'aliyun/mqs'
 ```
 
-Yes, require `mqs` instead of `aliyun-mqs`. It's kind of wired and unconsistent.
+###
 
 ### Configure
 
 ```ruby
-Mqs.configure do |config|
+Aliyun::Mqs.configure do |config|
   config.access_key_id     = '0123456789ABCDEF'
   config.access_key_secret = '*********************'
   config.access_region     = 'cn-hangzhou'
@@ -54,8 +54,8 @@ Eg: Every leaf element of
 can be accessed as:
 
 ```ruby
-Response::message_body_md5
-Response::message_id
+Aliyun::Response::message_body_md5
+Aliyun::Response::message_id
 ```
 
 To determine wheater a request call is succeed, use `Response::success?`. `Response` is an imutable object, all instance method with side-effects will return a new instance of `Response`. So, instead of
@@ -63,7 +63,7 @@ To determine wheater a request call is succeed, use `Response::success?`. `Respo
 ```ruby
 message = queue.receive         # message is an Response
 message.visibility = 1.minute
-message.visibility = 8.minute  # wrong, reuse receipt handle
+message.visibility = 8.minute   # wrong, reuse receipt handle
 ```
 
 you shoud pass the return value (agian, an `Response`) around:
@@ -77,8 +77,8 @@ resp = resp.visibility = 8.minute
 ### Get an existing queue
 
 ```ruby
-queue = Mqs::Queue.get 'queue-name'
-queue = Mqs::Queue.get 'queue-name', :access_owner_id: 'your_id'
+queue = Aliyun::Mqs.get 'queue-name'
+queue = Aliyun::Mqs.get 'queue-name', :access_owner_id: 'your_id'
 ```
 
 ### Delete a queue
@@ -109,7 +109,8 @@ message.delete
 queue.delete message
 queue.delete "#{you_message_recipet_handlerer}"
 ```
-### Change message visibility
+
+### Change message visibility (not implemented yet)
 
 ```ruby
 resp = message.visibility = Time.now + 1.hour

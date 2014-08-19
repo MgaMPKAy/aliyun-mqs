@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'mqs/version'
+require 'aliyun/mqs/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'aliyun-mqs'
-  spec.version       = Mqs::VERSION
+  spec.version       = Aliyun::Mqs::VERSION
   spec.authors       = ["mgampkay"]
   spec.email         = ["mgampkay@gmail.com"]
   spec.summary       = 'Ruby SDK for Aliyun MQS (non-official)'
