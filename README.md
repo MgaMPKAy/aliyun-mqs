@@ -1,6 +1,5 @@
 # aliyun-mqs
-
-[![Gem Version](https://badge.fury.io/rb/aliyun-mqs.svg)](http://badge.fury.io/rb/aliyun-mqs)
+[![Build Status](https://travis-ci.org/skinnyworm/aliyun-mqs.svg)](https://travis-ci.org/skinnyworm/aliyun-mqs) [![Code Climate](https://codeclimate.com/github/skinnyworm/aliyun-mqs.png)](https://codeclimate.com/github/skinnyworm/aliyun-mqs) [![Code Coverage](https://codeclimate.com/github/skinnyworm/aliyun-mqs/coverage.png)](https://codeclimate.com/github/skinnyworm/aliyun-mqs) [![Gem Version](https://badge.fury.io/rb/aliyun-mqs.svg)](http://badge.fury.io/rb/aliyun-mqs)
 
 Talk to the mighty Aliyun MQS with charming ruby.
 
@@ -9,116 +8,213 @@ Talk to the mighty Aliyun MQS with charming ruby.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'aliyun-mqs'
+gem 'aliyun-mqs', :git => 'git://github.com/skinnyworm/aliyun-mqs.git'
 ```
 
 And then execute:
 
     $ bundle
+    
+As this branch of the gem is not yet merged into the master branch, you can not install it via `gem install` for now.
 
-Or install it yourself as:
+## Configuration
 
-    $ gem install aliyun-mqs
+### Command line configuration
 
-## Usage
+The gem come with a command line tool `mqs`. It can help you easily manage the aliyun mqs within the terminal. In order to use this tool, you need to provide a configuration yaml file in your home directory which contains information about your mqs access_id and keys. 
 
-### Require
+The configuration file should be stored at `~/aliyun-mqs.yml`
 
-```ruby
-require 'aliyun/mqs'
 ```
 
-###
+access_id:  'lUxxxxxxxx'
+key:        'VWxxxxxxxxxxxxxxxxxxxxx'
+region:     'cn-hangzhou'
+owner_id:   'ckxxxxxxxx'
 
-### Configure
+```
+
+
+### Rails configuration
+
+If you are going to use this gem in a rails environment. You need to create a configuration file at `<RAILS_ROOT>/config/aliyun-mqs.yml`. In this way, you can use different set of queues for your development or production environments.
+
+```
+
+development:
+	access_id:  'lUxxxxxxxx'
+	key:        'VWxxxxxxxxxxxxxxxxxxxxx'
+	region:     'cn-hangzhou'
+	owner_id:   'ckxxxxxxxx'
+
+production:
+	access_id:  'lUxxxxxxxx'
+	key:        'VWxxxxxxxxxxxxxxxxxxxxx'
+	region:     'cn-hangzhou'
+	owner_id:   'ckxxxxxxxx'
+
+```
+
+### Config in an application
+
+At last you can also config the gem in place, by excute the following code before invoking and queue service.
 
 ```ruby
 Aliyun::Mqs.configure do |config|
-  config.access_key_id     = '0123456789ABCDEF'
-  config.access_key_secret = '*********************'
-  config.access_region     = 'cn-hangzhou'
-  config.access_owner_id   = 'cirno'
+  config.access_id = 'access-id'
+  config.key = "key"
+  config.region = 'region'
+  config.owner_id = 'owner-id'
 end
 ```
 
-### Response
 
-Most API returns a `Response` object, which contains status and all leaf element in the XML response.
-Eg: Every leaf element of
+## Commandline
 
-```xml
+This gem comes with a handy commandline tool `mqs` to help you manage your queue. Once the queue is installed. Execute 'mqs --help' to find out what commands are supported.
+
+```
+$ mqs --help
+
+Commands:
+  mqs consume [queue] -wait <wait_seconds>  # 从[queue]队列接受消息并删除
+  mqs create [queue]                        # 创建一个消息队列
+  mqs delete [queue]                        # 删除一个消息队列
+  mqs peek [queue]                          # 从[queue]队列中peek消息
+  mqs queues                                # 列出所有消息队列列表
+  mqs send [queue] [message]                # 往[queue]队列发送[message]消息
+```
+
+Following are few examples.
+
+#### 消息队列列表
+
+```
+$ mqs queues
+消息队列列表
+another
+another1
+another2
+another3
+another4
+another5
+```
+
+#### 往队列发送消息
+
+```
+$ mqs send another "Test message"
+发送消息到another队列
 <?xml version="1.0"?>
 <Message xmlns="http://mqs.aliyuncs.com/doc/v1">
-  <MessageBodyMD5>654E27D8879283831B664BD8B7F0AD4</MessageBodyMD5>
-  <MessageId>6003A74BEB1D5460-1-147DF4497D4-200000024</MessageId>
+  <MessageBodyMD5>82DFA5549EBC9AFC168EB7931EBECE5F</MessageBodyMD5>
+  <MessageId>55D5B01D1AE93D78-1-14979D45F33-200000001</MessageId>
 </Message>
 ```
-can be accessed as:
 
-```ruby
-Aliyun::Response::message_body_md5
-Aliyun::Response::message_id
+#### Peek队列中的消息
+ ```
+$ mqs peek another
+Peek 队列another中的消息
+=============================================
+队列: another
+ID: 55D5B01D1AE93D78-1-14979D45F33-200000001
+MD5: 82DFA5549EBC9AFC168EB7931EBECE5F
+Enqueue at: 2014-11-04 16:03:21 +0800
+First enqueue at: 2014-11-04 16:03:21 +0800
+Dequeue count: 0
+Priority: 10
+=============================================
+Test message
 ```
 
-To determine wheater a request call is succeed, use `Response::success?`. `Response` is an imutable object, all instance method with side-effects will return a new instance of `Response`. So, instead of
 
-```ruby
-message = queue.receive         # message is an Response
-message.visibility = 1.minute
-message.visibility = 8.minute   # wrong, reuse receipt handle
+#### 消费队列中的消息
+
+Be careful, consume command will first receive the message and then delete the message within a time period specfied by the queue.
+
+ ```
+$ mqs consume another
+Consume 队列another中的消息
+=============================================
+队列: another
+ID: 55D5B01D1AE93D78-1-14979D45F33-200000001
+MD5: 82DFA5549EBC9AFC168EB7931EBECE5F
+Receipt handle: 1-ODU4OTkzNDU5My0xNDE1MDg4MzU2LTEtMTA=
+Enqueue at: 2014-11-04 16:03:21 +0800
+First enqueue at: 2014-11-04 16:05:26 +0800
+Next visible at: 2014-11-04 16:05:56 +0800
+Dequeue count: 1
+Priority: 10
+=============================================
+Test message
 ```
 
-you shoud pass the return value (agian, an `Response`) around:
+
+
+## Usage
+
+Following are some example useage of the gem. You can read the specs to understand the full features of this gem
 
 ```ruby
-resp = queue.receive
-resp = resp.visibility = 1.minute
-resp = resp.visibility = 8.minute
-```
+#get a list of queue object
+queues = Aliyun::Mqs::Queue.queues
 
-### Get an existing queue
+#get all queues start with name 'query'
+queues =Aliyun::Mqs::Queue.queues(query: "query") 
 
-```ruby
-queue = Aliyun::Mqs.get 'queue-name'
-queue = Aliyun::Mqs.get 'queue-name', :access_owner_id: 'your_id'
-```
+#get all queues start with name 'query'
+queues = Aliyun::Mqs::Queue.queues(size: 5)
 
-### Delete a queue
+#Obtain a queue object with name "aQueue"
+queue = Aliyun::Mqs::Queue["aQueue"] 
 
-```ruby
-queue.destroy
-```
+#Create a new queue
+Aliyun::Mqs::Queue["aQueue"].create
 
-### Send messages
+#Create a new queue with polling wait 30 seconds
+Aliyun::Mqs::Queue["aQueue"].create(:PollingWaitSeconds => 30)
 
-```ruby
-resp = queue.send "Hello, World!"
-resp = queue.send "Hello, Cirno!", delay_seconds: 9, priority: 9
-```
+#Delete an existing queue
+Aliyun::Mqs::Queue["aQueue"].delete
 
-### Recveive messages
+#Send a text message
+Aliyun::Mqs::Queue["aQueue"].send_message "text message"
 
-```ruby
-message = queue.receive
-message = queue.receive waitseconds: 10, peekonly: true
-message = queue.peek
-```
+#Send a text message with priority option
+Aliyun::Mqs::Queue["aQueue"].send_message "text message", :Priority=>1
 
-### Delete messages
+#Receive a message
+message = Aliyun::Mqs::Queue["aQueue"].receive_message
 
-```ruby
+#Sample rspec for a message
+expect(message).not_to be_nil
+expect(message.id).to eq("5fea7756-0ea4-451a-a703-a558b933e274")
+expect(message.body).to eq("This is a test message")
+expect(message.body_md5).to eq("fafb00f5732ab283681e124bf8747ed1")
+expect(message.receipt_handle).to eq("MbZj6wDWli+QEauMZc8ZRv37sIW2iJKq3M9Mx/KSbkJ0")
+expect(message.enqueue_at).to eq(Time.at(1250700979248000/1000.0))
+expect(message.first_enqueue_at).to eq(Time.at(1250700779318000/1000.0))
+expect(message.next_visible_at).to eq(Time.at(1250700799348000/1000.0))
+expect(message.dequeue_count).to eq(1)
+expect(message.priority).to eq(8)
+
+#Receive a message with option to override the default poll wait time of the queue.
+message = Aliyun::Mqs::Queue["aQueue"].receive_message wait_seconds: 60
+
+#Peek message in the queue
+message = Aliyun::Mqs::Queue["aQueue"].peek_message
+
+#Delete received message
+message = Aliyun::Mqs::Queue["aQueue"].receive_message
 message.delete
-queue.delete message
-queue.delete "#{you_message_recipet_handlerer}"
+
+#Change message visibility
+message = Aliyun::Mqs::Queue["aQueue"].receive_message
+message.change_visibility 10
+
 ```
 
-### Change message visibility (not implemented yet)
-
-```ruby
-resp = message.visibility = Time.now + 1.hour
-resp = message.visibility = Time.now.to_f * 1000 + 10
-resp = message.visibility += 1.hour
-```
 
 ## Contributing
 
@@ -127,7 +223,3 @@ resp = message.visibility += 1.hour
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
-
-## References
-
-+ xiaohuilam's [aliyun-mqs-php-library](https://github.com/xiaohuilam/aliyun-mqs-php-library)

@@ -1,77 +1,67 @@
-require 'active_support/core_ext/hash'
-require 'builder'
-require 'aliyun/mqs/http'
+module Aliyun::Mqs
+  class Queue
+    attr_reader :name
 
-module Aliyun
-  module Mqs
+    delegate :to_s, to: :name
 
-    class Queue
-      include Mqs::Http
-
-      def initialize(name, access_owner_id: nil)
-        @access_key_id     = Mqs.configuration.access_key_id
-        @access_key_secret = Mqs.configuration.access_key_secret
-        @access_region     = Mqs.configuration.access_region
-        @access_owner_id   = access_owner_id || Mqs.configuration.access_owner_id
-        @access_queue = name
-        @access_host  = "#{@access_owner_id}.mqs-#{@access_region}.aliyuncs.com"
-        throw '参数不能为nil' if instance_variables.any? {|x| x == nil}
+    class << self
+      def [] name
+        Queue.new(name)
       end
 
-
-      def destroy
-        verb = 'DELETE'
-        request_resource = "/#{@access_queue}"
-        request_uri = "http://#{@access_host}#{request_resource}"
-        send_request(verb, request_uri)
+      def queues opts={}
+        mqs_options = {query: "x-mqs-prefix", offset: "x-mqs-marker", size: "x-mqs-ret-number"}
+        mqs_headers = opts.slice(*mqs_options.keys).reduce({}){|mqs_headers, item| k, v = *item; mqs_headers.merge!(mqs_options[k]=>v)}
+        response = Request.get("/", mqs_headers: mqs_headers)
+        Hash.xml_array(response, "Queues", "Queue").collect{|item| Queue.new(URI(item["QueueURL"]).path.sub!(/^\//, ""))}
       end
+    end
 
-      def send(message_body, delay_seconds: 0, priority: 8)
-        verb = 'POST'
-        content_body = to_xml(message_body, delay_seconds, priority)
-        request_resource = "/#{@access_queue}/messages"
-        request_uri = "http://#{@access_host}#{request_resource}"
-        send_request(verb, request_uri, content_body)
+    def initialize name
+      @name = name
+    end
+
+    def create opts={}
+      response = Request.put(queue_path) do |request|
+        msg_options = {
+          :VisibilityTimeout => 30,
+          :DelaySeconds => 0,
+          :MaximumMessageSize => 65536,
+          :MessageRetentionPeriod => 345600,
+          :PollingWaitSeconds => 0}.merge(opts)
+        request.content :Queue, msg_options
       end
+    end
 
-      def receive(waitseconds: nil, peekonly: false)
-        verb = 'GET'
-        query_params = {}
-        query_params[:waitseconds] = waitseconds if waitseconds
-        query_params[:peekonly] = true if peekonly # Aliyun doesn't accept uncessary query params
-        request_resource =  "/#{@access_queue}/messages" + (query_params.length > 0 ? '?' + query_params.to_param : '')
-        request_uri      = "http://#{@access_host}#{request_resource}"
-        send_request(verb, request_uri)
+    def delete
+      Request.delete(queue_path)
+    end
+
+    def send_message message, opts={}
+      Request.post(messages_path) do |request|
+        msg_options = {:DelaySeconds => 0, :Priority => 10}.merge(opts)
+        request.content :Message, msg_options.merge(:MessageBody => message.to_s)
       end
+    end
 
-      def delete message
-        verb = 'DELETE'
-        if String === message
-          receipt_handle = message
-        elsif Response === message
-          receipt_handle = message.receipt_handle
-        end
-        request_resource = "/#{@access_queue}/messages?" + {ReceiptHandle: receipt_handle}.to_param
-        request_uri = "http://#{@access_host}#{request_resource}"
-        send_request(verb, request_uri)
-      end
+    def receive_message wait_seconds: nil
+      request_opts = {}
+      request_opts.merge!(params:{waitseconds: wait_seconds}) if wait_seconds
+      result = Request.get(messages_path, request_opts)
+      Message.new(self, result)
+    end
 
-      def peek(waitseconcds: nil)
-        receive(waitseconds: waitseconcds, peekonly: true)
-      end
+    def peek_message
+      result = Request.get(messages_path, params: {peekonly: true})
+      Message.new(self, result)
+    end
 
-      private
+    def queue_path
+      "/#{name}"
+    end
 
-      def to_xml(message_body, delay_seconds, priority)
-        xml = Builder::XmlMarkup.new( :indent => 2 )
-        xml.instruct! :xml, :encoding => 'UTF-8'
-        xml.Message(:xmlns => 'http://mqs.aliyuncs.com/doc/v1/') do |m|
-          m.MessageBody message_body
-          m.DelaySeconds delay_seconds
-          m.Priority priority
-        end
-      end
-
+    def messages_path
+      "/#{name}/messages"
     end
 
   end
