@@ -8,7 +8,7 @@ Talk to the mighty Aliyun MQS with charming ruby.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'aliyun-mqs', :git => 'git://github.com/skinnyworm/aliyun-mqs.git'
+gem 'aliyun-mqs'
 ```
 
 And then execute:
