@@ -14,16 +14,16 @@ gem 'aliyun-mqs', :git => 'git://github.com/skinnyworm/aliyun-mqs.git'
 And then execute:
 
     $ bundle
-    
+
 As this branch of the gem is not yet merged into the master branch, you can not install it via `gem install` for now.
 
 ## Configuration
 
 ### Command line configuration
 
-The gem come with a command line tool `mqs`. It can help you easily manage the aliyun mqs within the terminal. In order to use this tool, you need to provide a configuration yaml file in your home directory which contains information about your mqs access_id and keys. 
+The gem come with a command line tool `mqs`. It can help you easily manage the aliyun mqs within the terminal. In order to use this tool, you need to provide a configuration yaml file in your home directory which contains information about your mqs access_id and keys.
 
-The configuration file should be stored at `~/aliyun-mqs.yml`
+The configuration file should be stored at `~/.aliyun-mqs.yml`
 
 ```
 
@@ -161,13 +161,13 @@ Following are some example useage of the gem. You can read the specs to understa
 queues = Aliyun::Mqs::Queue.queues
 
 #get all queues start with name 'query'
-queues =Aliyun::Mqs::Queue.queues(query: "query") 
+queues =Aliyun::Mqs::Queue.queues(query: "query")
 
 #get all queues start with name 'query'
 queues = Aliyun::Mqs::Queue.queues(size: 5)
 
 #Obtain a queue object with name "aQueue"
-queue = Aliyun::Mqs::Queue["aQueue"] 
+queue = Aliyun::Mqs::Queue["aQueue"]
 
 #Create a new queue
 Aliyun::Mqs::Queue["aQueue"].create
